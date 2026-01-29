@@ -13,6 +13,8 @@ pipeline {
     stage('Checkout') {
       steps {
         checkout scm
+        // Ensure the Maven wrapper is executable on the agent
+        sh 'chmod +x mvnw'
       }
     }
 
