@@ -23,21 +23,9 @@ pipeline {
         sh './mvnw test -DskipTests'
       }
     }
-
-    stage('Build JAR') {
+    stage('Build') {
       steps {
-        // Utilise ./mvnw pour être sûr d'avoir la bonne version de Maven
-        sh './mvnw -B -DskipTests package'
-      }
-    }
-
-    stage('Docker Build') {
-      steps {
-        script {
-          // Utilise ton Dockerfile pour créer l'image
-          sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
-          sh "docker build -t ${IMAGE_NAME}:latest ."
-        }
+        sh './mvnw -B package'
       }
     }
   }
