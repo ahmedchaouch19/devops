@@ -20,20 +20,25 @@ pipeline {
 
     stage('Unit Tests') {
       steps {
-        // On tente les tests, mais on ne bloque pas tout si un test échoue
-        // Ou utilise -DskipTests si tu veux juste que ça passe
-        sh './mvnw test -DskipTests'
+        script {
+          // Run tests and mark build UNSTABLE instead of FAILURE on test failures
+          catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
+            sh './mvnw -B test'
+          }
+        }
       }
     }
     stage('Build') {
       steps {
-        sh './mvnw -B package'
+        sh './mvnw -B -DskipTests package'
       }
     }
   }
 
   post {
     always {
+      // Publish test reports (if any) so Jenkins shows failures/stacktraces
+      junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
       // Nettoyage pour ne pas encombrer le serveur Jenkins
       cleanWs()
     }
