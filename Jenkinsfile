@@ -36,8 +36,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh """
-                    sudo docker build -t ${FULL_IMAGE_NAME} .
-                    sudo docker tag ${FULL_IMAGE_NAME} ${DOCKER_REPO}/${IMAGE_NAME}:latest
+                    docker build -t ${FULL_IMAGE_NAME} .
+                    docker tag ${FULL_IMAGE_NAME} ${DOCKER_REPO}/${IMAGE_NAME}:latest
                 """
             }
         }
@@ -47,8 +47,8 @@ pipeline {
                 script {
                     docker.withRegistry('https://docker.io', DOCKER_CREDENTIALS_ID) {
                         sh """
-                           sudo docker push ${FULL_IMAGE_NAME}
-                           sudo docker push ${DOCKER_REPO}/${IMAGE_NAME}:latest
+                            docker push ${FULL_IMAGE_NAME}
+                            docker push ${DOCKER_REPO}/${IMAGE_NAME}:latest
                         """
                     }
                 }
