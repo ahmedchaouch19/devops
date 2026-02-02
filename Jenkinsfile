@@ -10,22 +10,9 @@ pipeline {
 
         APP_PORT = '8080'
         CONTAINER_NAME = 'student-management-app'
-        TO_EMAIL = 'ahmetchaouch19@gmail.com'         // Email pour notifications
     }
 
     stages {
-
-        stage('Send Welcome Email') {
-            steps {
-                mail to: "${TO_EMAIL}",
-                     subject: "Pipeline Started - Build #${env.BUILD_NUMBER}",
-                     body: """Pipeline started
-Project: ${env.JOB_NAME}
-Build: ${env.BUILD_NUMBER}
-URL: ${env.BUILD_URL}
-"""
-            }
-        }
 
         stage('Checkout GIT') {
             steps {
@@ -57,18 +44,13 @@ URL: ${env.BUILD_URL}
 
         stage('Push Docker Image') {
             steps {
-                // ✅ Utilisation sécurisée des credentials Docker
-                withCredentials([usernamePassword(
-                    credentialsId: "${DOCKER_CREDENTIALS_ID}",
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh """
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push ${FULL_IMAGE_NAME}
-                        docker push ${DOCKER_REPO}/${IMAGE_NAME}:latest
-                        docker logout
-                    """
+                script {
+                    docker.withRegistry('https://docker.io', DOCKER_CREDENTIALS_ID) {
+                        sh """
+                            docker push ${FULL_IMAGE_NAME}
+                            docker push ${DOCKER_REPO}/${IMAGE_NAME}:latest
+                        """
+                    }
                 }
             }
         }
@@ -95,15 +77,11 @@ URL: ${env.BUILD_URL}
         }
 
         success {
-            mail to: "${TO_EMAIL}",
-                 subject: "Pipeline SUCCESS - Build #${env.BUILD_NUMBER}",
-                 body: "Application running on port ${APP_PORT}"
+            echo "Pipeline SUCCESS - Application running on port ${APP_PORT}"
         }
 
         failure {
-            mail to: "${TO_EMAIL}",
-                 subject: "Pipeline FAILURE - Build #${env.BUILD_NUMBER}",
-                 body: "Check Jenkins logs"
+            echo "Pipeline FAILURE - Check Jenkins logs"
         }
     }
 }
