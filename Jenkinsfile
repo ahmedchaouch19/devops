@@ -42,19 +42,18 @@ pipeline {
             }
         }
 
-     stage('Push Docker Image') {
-    steps {
-        script {
-            docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials') {
-    sh "docker push ${FULL_IMAGE_NAME}"
-    sh "docker push ${DOCKER_REPO}/${IMAGE_NAME}:latest"
-}
-
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('https://docker.io', docker-hub-credentials) {
+                        sh """
+                            docker push ${FULL_IMAGE_NAME}
+                            docker push ${DOCKER_REPO}/${IMAGE_NAME}:latest
+                        """
+                    }
+                }
             }
         }
-    }
-}
-
 
         stage('Run Container') {
             steps {
