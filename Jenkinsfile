@@ -29,7 +29,7 @@ pipeline {
 
         stage('Run Unit Tests') {
             steps {
-                sh 'mvn test '
+                sh 'mvn test'
             }
         }
 
@@ -45,7 +45,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('https://docker.io', docker-hub-credentials) {
+                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS_ID}") {
                         sh """
                             docker push ${FULL_IMAGE_NAME}
                             docker push ${DOCKER_REPO}/${IMAGE_NAME}:latest
