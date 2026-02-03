@@ -56,32 +56,34 @@ pipeline {
         }
 
         stage('Run Container') {
-            steps {
-                script {
-                    // Vérifie si le conteneur existe déjà et supprime-le
-                    sh """
-                        if [ \$(docker ps -aq -f name=${CONTAINER_NAME}) ]; then
-                            echo "Stopping and removing existing container..."
-                            docker stop ${CONTAINER_NAME}
-                            docker rm ${CONTAINER_NAME}
-                        fi
-                    """
+    steps {
+        script {
+            // Stop et supprime le conteneur existant
+            sh """
+                if [ \$(docker ps -aq -f name=${CONTAINER_NAME}) ]; then
+                    echo "Stopping and removing existing container..."
+                    docker stop ${CONTAINER_NAME}
+                    docker rm ${CONTAINER_NAME}
+                fi
+            """
 
-                    // Vérifie si le port est utilisé et change de port si nécessaire
-                    def freePort = sh(script: "comm -23 <(seq 8080 8090) <(ss -Htan | awk '{print \$4}' | awk -F: '{print \$NF}') | head -n1", returnStdout: true).trim()
-                    echo "Using port ${freePort} for container"
+            // Lancer un script bash pour trouver un port libre et démarrer le conteneur
+            sh """
+                #!/bin/bash
+                # Trouver un port libre entre 8080 et 8090
+                freePort=\$(comm -23 <(seq 8080 8090) <(ss -Htan | awk '{print \$4}' | awk -F: '{print \$NF}') | head -n1)
+                echo "Using port \$freePort for container"
 
-                    // Lancer le conteneur
-                    sh """
-                        docker run -d \
-                          --name ${CONTAINER_NAME} \
-                          -p ${freePort}:${APP_PORT} \
-                          --restart unless-stopped \
-                          ${FULL_IMAGE_NAME}
-                    """
-                }
-            }
+                docker run -d \
+                  --name ${CONTAINER_NAME} \
+                  -p \$freePort:${APP_PORT} \
+                  --restart unless-stopped \
+                  ${FULL_IMAGE_NAME}
+            """
         }
+    }
+}
+
 
     }
 
