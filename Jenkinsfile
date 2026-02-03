@@ -56,20 +56,22 @@ pipeline {
         }
 
         stage('Run Container') {
-            steps {
-                sh """
-                    docker stop ${CONTAINER_NAME} || true
-                    docker rm ${CONTAINER_NAME} || true
+    steps {
+        sh """
+            # Stop and remove any container using port 8080
+            docker ps -q --filter "publish=${APP_PORT}" | xargs -r docker stop
+            docker ps -aq --filter "publish=${APP_PORT}" | xargs -r docker rm
 
-                    docker run -d \
-                      --name ${CONTAINER_NAME} \
-                      -p ${APP_PORT}:${APP_PORT} \
-                      --restart unless-stopped \
-                      ${FULL_IMAGE_NAME}
-                """
-            }
-        }
+            # Run new container
+            docker run -d \
+              --name ${CONTAINER_NAME} \
+              -p ${APP_PORT}:${APP_PORT} \
+              --restart unless-stopped \
+              ${FULL_IMAGE_NAME}
+        """
     }
+}
+
 
     post {
         always {
