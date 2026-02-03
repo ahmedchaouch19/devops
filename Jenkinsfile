@@ -58,11 +58,11 @@ pipeline {
         stage('Run Container') {
     steps {
         sh """
-            # Stop and remove any container using port 8080
-            docker ps -q --filter "publish=${APP_PORT}" | xargs -r docker stop
-            docker ps -aq --filter "publish=${APP_PORT}" | xargs -r docker rm
+            # Stop et supprimer le conteneur existant par nom
+            docker stop ${CONTAINER_NAME} || true
+            docker rm ${CONTAINER_NAME} || true
 
-            # Run new container
+            # Lancer le nouveau conteneur
             docker run -d \
               --name ${CONTAINER_NAME} \
               -p ${APP_PORT}:${APP_PORT} \
@@ -71,6 +71,7 @@ pipeline {
         """
     }
 }
+
 
     }
 
