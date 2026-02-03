@@ -58,31 +58,28 @@ pipeline {
         stage('Run Container') {
     steps {
         script {
-            // Stop et supprime le conteneur existant
+            // Stop et supprime le conteneur existant s'il existe
             sh """
-                if [ \$(docker ps -aq -f name=${CONTAINER_NAME}) ]; then
+                EXISTING=\$(docker ps -aq -f name=${CONTAINER_NAME})
+                if [ ! -z "\$EXISTING" ]; then
                     echo "Stopping and removing existing container..."
                     docker stop ${CONTAINER_NAME}
                     docker rm ${CONTAINER_NAME}
                 fi
             """
 
-            // Lancer un script bash pour trouver un port libre et démarrer le conteneur
+            // Lancer le conteneur
             sh """
-                #!/bin/bash
-                # Trouver un port libre entre 8080 et 8090
-                freePort=\$(comm -23 <(seq 8080 8090) <(ss -Htan | awk '{print \$4}' | awk -F: '{print \$NF}') | head -n1)
-                echo "Using port \$freePort for container"
-
                 docker run -d \
                   --name ${CONTAINER_NAME} \
-                  -p \$freePort:${APP_PORT} \
+                  -p ${APP_PORT}:${APP_PORT} \
                   --restart unless-stopped \
                   ${FULL_IMAGE_NAME}
             """
         }
     }
 }
+
 
 
     }
