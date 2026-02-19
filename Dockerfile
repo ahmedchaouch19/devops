@@ -1,20 +1,21 @@
+# Étape 1 : build
 FROM maven:3.9.4-eclipse-temurin-17 AS build
 WORKDIR /app
-
-# Copy only the files needed for a reproducible Maven build
-COPY pom.xml mvnw ./
-COPY .mvn .mvn
+COPY pom.xml .
 COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Build the application (skip tests for faster image builds)
-RUN mvn -B -DskipTests package
-
+# Étape 2 : runtime
 FROM eclipse-temurin:17-jre
 WORKDIR /app
+COPY --from=build /app/target/student-management-0.0.1-SNAPSHOT.jar app.jar
 
-# Copy the built jar from the builder stage
-COPY --from=build /app/target/*.jar app.jar
+# Port correspondant à application.properties
+EXPOSE 8089
 
-EXPOSE 8080
+# Variables d'environnement (optionnel)
+ENV SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/studentdb?createDatabaseIfNotExist=true&serverTimezone=UTC
+ENV SPRING_DATASOURCE_USERNAME=springuser
+ENV SPRING_DATASOURCE_PASSWORD=spring123
 
-ENTRYPOINT ["java","-jar","/app.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]

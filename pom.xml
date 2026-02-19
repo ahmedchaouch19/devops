@@ -11,6 +11,7 @@
     <groupId>tn.esprit</groupId>
     <artifactId>student-management</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
     <name>student-management</name>
     <description>student-management</description>
     <url/>
