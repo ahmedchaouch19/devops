@@ -39,7 +39,7 @@ pipeline {
                     mvn sonar:sonar \
                       -Dsonar.projectKey=spring-app \
                       -Dsonar.projectName=spring-app \
-                      -Dsonar.host.url=http://192.168.49.1:31000 \
+                      -Dsonar.host.url=http://192.168.58.2:31000 \
                       -Dsonar.token=sqp_35566255ed274268856be620601c08e2374fb374
                 '''
             }
