@@ -4,11 +4,10 @@ pipeline {
     environment {
         IMAGE_NAME = 'student-management'
         IMAGE_TAG = "${env.BUILD_NUMBER}"
-        DOCKER_REPO = 'ahmetch'                       // Ton username Docker Hub
+        DOCKER_REPO = 'ahmetch'
         FULL_IMAGE_NAME = "${DOCKER_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-
-        APP_PORT = '8080'                             // port interne et par défaut
+        APP_PORT = '8080'
         CONTAINER_NAME = 'student-management-app'
     }
 
@@ -30,6 +29,19 @@ pipeline {
         stage('Run Unit Tests') {
             steps {
                 sh 'mvn test'
+            }
+        }
+
+        // ✅ AJOUT : SonarQube demandé par le TP (slide 24)
+        stage('SonarQube Analysis') {
+            steps {
+                sh '''
+                    mvn sonar:sonar \
+                      -Dsonar.projectKey=spring-app \
+                      -Dsonar.projectName=spring-app \
+                      -Dsonar.host.url=http://127.0.0.1:38523 \
+                      -Dsonar.token=sqp_35566255ed274268856be620601c08e2374fb374
+                '''
             }
         }
 
@@ -55,32 +67,24 @@ pipeline {
             }
         }
 
-        stage('Run Container') {
-    steps {
-        script {
-            // Stop et supprime le conteneur existant s'il existe
-            sh """
-                EXISTING=\$(docker ps -aq -f name=${CONTAINER_NAME})
-                if [ ! -z "\$EXISTING" ]; then
-                    echo "Stopping and removing existing container..."
-                    docker stop ${CONTAINER_NAME}
-                    docker rm ${CONTAINER_NAME}
-                fi
-            """
-
-            // Lancer le conteneur
-            sh """
-                docker run -d \
-                  --name ${CONTAINER_NAME} \
-                  -p ${APP_PORT}:${APP_PORT} \
-                  --restart unless-stopped \
-                  ${FULL_IMAGE_NAME}
-            """
+        // ✅ AJOUT : Deploy Kubernetes demandé par le TP (slides 16-21)
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh '''
+                    kubectl apply -f spring-deployment.yaml -n devops
+                    kubectl rollout status deployment/spring-app -n devops
+                '''
+            }
         }
-    }
-}
 
-
+        stage('Verify Deployment') {
+            steps {
+                sh '''
+                    kubectl get pods -n devops
+                    kubectl get svc -n devops
+                '''
+            }
+        }
 
     }
 
@@ -88,11 +92,9 @@ pipeline {
         always {
             echo "Pipeline execution completed"
         }
-
         success {
-            echo "Pipeline SUCCESS - Application running on port ${APP_PORT}"
+            echo "Pipeline SUCCESS"
         }
-
         failure {
             echo "Pipeline FAILURE - Check Jenkins logs"
         }
