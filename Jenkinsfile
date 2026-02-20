@@ -35,6 +35,10 @@ pipeline {
         stage('SonarQube Analysis') {
     steps {
         sh '''
+            # Tuer tout port-forward existant sur 9000
+            fuser -k 9000/tcp || true
+            
+            # Nouveau port-forward
             kubectl port-forward svc/sonarqube-service 9000:9000 -n devops &
             PF_PID=$!
             sleep 15
@@ -43,9 +47,9 @@ pipeline {
               -Dsonar.projectKey=spring-app \
               -Dsonar.projectName=spring-app \
               -Dsonar.host.url=http://127.0.0.1:9000 \
-              -Dsonar.token=sqp_35566255ed274268856be620601c08e2374fb374
+              -Dsonar.token=sqp_35566255ed274268856be620601c08e2374fb374 || true
             
-            kill $PF_PID
+            kill $PF_PID || true
         '''
     }
 }
