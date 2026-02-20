@@ -35,25 +35,17 @@ pipeline {
         stage('SonarQube Analysis') {
     steps {
         sh '''
-            minikube service sonarqube-service -n devops --url &
-            MINIKUBE_PID=$!
+            kubectl port-forward svc/sonarqube-service 9000:9000 -n devops &
+            PF_PID=$!
+            sleep 15
             
-        
-            sleep 10
-            
-            SONAR_URL=$(minikube service sonarqube-service -n devops --url 2>/dev/null | head -1)
-            
-            echo "SonarQube URL: $SONAR_URL"
-            
-       
             mvn sonar:sonar \
               -Dsonar.projectKey=spring-app \
               -Dsonar.projectName=spring-app \
-              -Dsonar.host.url=$SONAR_URL \
+              -Dsonar.host.url=http://127.0.0.1:9000 \
               -Dsonar.token=sqp_35566255ed274268856be620601c08e2374fb374
             
-          
-            kill $MINIKUBE_PID
+            kill $PF_PID
         '''
     }
 }
