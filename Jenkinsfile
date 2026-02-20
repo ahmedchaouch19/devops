@@ -32,19 +32,31 @@ pipeline {
             }
         }
 
-        // ✅ AJOUT : SonarQube demandé par le TP (slide 24)
         stage('SonarQube Analysis') {
-            steps {
-                sh '''
-                    mvn sonar:sonar \
-                      -Dsonar.projectKey=spring-app \
-                      -Dsonar.projectName=spring-app \
-                      -Dsonar.host.url=http://192.168.58.2:31000 \
-                      -Dsonar.token=sqp_35566255ed274268856be620601c08e2374fb374
-                '''
-            }
-        }
-
+    steps {
+        sh '''
+            minikube service sonarqube-service -n devops --url &
+            MINIKUBE_PID=$!
+            
+        
+            sleep 10
+            
+            SONAR_URL=$(minikube service sonarqube-service -n devops --url 2>/dev/null | head -1)
+            
+            echo "SonarQube URL: $SONAR_URL"
+            
+       
+            mvn sonar:sonar \
+              -Dsonar.projectKey=spring-app \
+              -Dsonar.projectName=spring-app \
+              -Dsonar.host.url=$SONAR_URL \
+              -Dsonar.token=sqp_35566255ed274268856be620601c08e2374fb374
+            
+          
+            kill $MINIKUBE_PID
+        '''
+    }
+}
         stage('Build Docker Image') {
             steps {
                 sh """
