@@ -75,15 +75,16 @@ pipeline {
             }
         }
 
-        // ✅ AJOUT : Deploy Kubernetes demandé par le TP (slides 16-21)
         stage('Deploy to Kubernetes') {
-            steps {
-                sh '''
-                    kubectl apply -f spring-deployment.yaml -n devops
-                    kubectl rollout status deployment/spring-app -n devops
-                '''
-            }
-        }
+    steps {
+        sh '''
+            kubectl set image deployment/spring-app \
+              spring-app=ahmetch/student-management:latest \
+              -n devops
+            kubectl rollout status deployment/spring-app -n devops
+        '''
+    }
+}
 
         stage('Verify Deployment') {
             steps {
